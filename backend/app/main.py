@@ -11,7 +11,7 @@ from .db import SessionLocal, engine, Base
 from .schemas import (
     LoginIn, LoginOut, DraftOut,
     StartSessionIn, StartSessionOut,
-    LanguageCompleteIn, ContentSubmitIn,
+    LanguageCompleteIn,
     RevisionStatusOut, MessageOut
 )
 from . import crud, models_db as models
@@ -65,6 +65,7 @@ def post_login(payload: LoginIn, db: Session = Depends(get_db)) -> LoginOut:
 # ------------------------
 # Fetch draft & feedback
 # ------------------------
+
 @app.get("/api/draft/{asurite}", response_model=DraftOut)
 def get_draft(asurite: str, db: Session = Depends(get_db)) -> DraftOut:
     asurite = (asurite or "").strip().lower()
@@ -75,8 +76,11 @@ def get_draft(asurite: str, db: Session = Depends(get_db)) -> DraftOut:
         draft_id=draft.id,
         asurite=draft.asurite,
         essay_text=draft.essay_text,
-        language_feedback=draft.language_feedback,
-        content_feedback=draft.content_feedback
+        feedback_strengths=getattr(draft, "feedback_strengths", "") or "",
+        feedback_area1=getattr(draft, "feedback_area1", "") or "",
+        feedback_area2=getattr(draft, "feedback_area2", "") or "",
+        feedback_area3=getattr(draft, "feedback_area3", "") or "",
+        content_feedback=getattr(draft, "content_feedback", "") or "",
     )
 
 # ------------------------
@@ -91,30 +95,22 @@ def start_session(payload: StartSessionIn, db: Session = Depends(get_db)) -> Sta
     return StartSessionOut(session_id=session.id, started_at=session.started_at)
 
 # ------------------------
-# Save language completion (rating + revised text)
+# Save language completion (rating + revised text) — now the final step
 # ------------------------
 @app.post("/api/revision/language/complete", response_model=RevisionStatusOut)
 def language_complete(payload: LanguageCompleteIn, db: Session = Depends(get_db)) -> RevisionStatusOut:
     try:
-        rev = crud.save_language_completion(db, payload.session_id, payload.language_revision_text, payload.language_rating)
+        # pass the revision_duration_seconds from the payload into the CRUD saver
+        rev = crud.save_language_completion(
+            db,
+            payload.session_id,
+            payload.language_revision_text,
+            payload.language_rating,
+            payload.revision_duration_seconds, 
+        )
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
     return RevisionStatusOut(session_id=payload.session_id, language_saved=True, rating_saved=rev.language_rating)
-
-# ------------------------
-# Submit content revision (finalize)
-# ------------------------
-@app.post("/api/revision/content/submit", response_model=MessageOut)
-def submit_content(payload: ContentSubmitIn, db: Session = Depends(get_db)) -> MessageOut:
-    try:
-        rev = crud.submit_content_revision(db, payload.session_id, payload.content_revision_text)
-    except ValueError as e:
-        msg = str(e)
-        code = 400 if "already" in msg else 404
-        raise HTTPException(status_code=code, detail=msg)
-    logger.info("Submitted revision for session %s (asurite=%s)", rev.session_id, rev.asurite)
-    return MessageOut(message="Revision submitted. Thank you!")
-
 # ------------------------
 # STATIC FRONTEND
 # ------------------------

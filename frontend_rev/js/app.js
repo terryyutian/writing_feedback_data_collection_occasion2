@@ -1,5 +1,5 @@
 // frontend_rev/js/app.js
-import { login, fetchDraft, startSession, completeLanguage, submitContent } from "./api.js";
+import { login, fetchDraft, startSession, completeLanguage } from "./api.js";
 
 /* ---------------------- Screens & State ---------------------- */
 const screens = {
@@ -16,7 +16,12 @@ const state = {
   draft: null,
   sessionId: null,
   languageRating: null,
-  mode: "language" // or "content"
+  mode: "language",
+  revisionStart: null,
+  // feedback navigation
+  feedbackParts: [],   // array of strings to show sequentially
+  feedbackIndex: 0,
+  feedbackVisited: []  // parallel boolean array marking which parts have been seen
 };
 
 /* simple show/hide helper */
@@ -40,19 +45,19 @@ const btnConfirmNo = document.getElementById("btnConfirmNo");
 const btnInstrAgree = document.getElementById("btnInstrAgree");
 
 /* Revision page elements */
-const feedbackBox = document.getElementById("feedbackBox");
+const feedbackPanel = document.getElementById("feedbackPanel");
+const btnFeedbackBack = document.getElementById("btnFeedbackBack");
+const btnFeedbackNext = document.getElementById("btnFeedbackNext");
 const draftEditor = document.getElementById("draftEditor");
 const revTitle = document.getElementById("revTitle");
 const revInstruction = document.getElementById("revInstruction");
-const btnProceedContent = document.getElementById("btnProceedContent");
-const btnSubmitFinal = document.getElementById("btnSubmitFinal");
+/* Submit button (previously 'Proceed') — keep the same id your HTML uses */
+const btnSubmit = document.getElementById("btnProceedContent"); // labeled "Submit" in HTML
 
-/* Floating rating overlay elements (new) */
+/* Floating rating overlay elements */
 const ratingOverlay = document.getElementById("ratingOverlay");
 const likertFloating = document.getElementById("likertFloating");
 const btnSubmitMyRating = document.getElementById("btnSubmitMyRating");
-const ratingThanks = document.getElementById("ratingThanks");
-const btnRatingOk = document.getElementById("btnRatingOk");
 const ratingHandle = document.getElementById("ratingHandle"); // may be null on tiny screens
 
 /* ---------------------- Login flow ---------------------- */
@@ -90,7 +95,6 @@ btnInstrAgree?.addEventListener("click", async () => {
     alert("Missing participant info. Please login again.");
     return;
   }
-  // start session if not started
   if (!state.sessionId) {
     try {
       const s = await startSession(state.asurite);
@@ -111,17 +115,91 @@ function setupRevisionPage() {
   if (revInstruction) {
     revInstruction.textContent = "Now, you will have 10 minutes to improve the language in your draft. In this step, focus only on enhancing language quality using the language-focused feedback provided.";
   }
-  if (feedbackBox) feedbackBox.value = state.draft?.language_feedback || "";
+
+  // Populate draft text
   if (draftEditor) draftEditor.value = state.draft?.essay_text || "";
-  if (feedbackBox) feedbackBox.readOnly = true;
-  // Hide overlays if present
+
+  // Build feedback parts array from draft fields (use safe textContent for dynamic parts)
+  const strengthsText = state.draft?.feedback_strengths || "";
+  const area1 = state.draft?.feedback_area1 || "";
+  const area2 = state.draft?.feedback_area2 || "";
+  const area3 = state.draft?.feedback_area3 || "";
+
+  state.feedbackParts = [
+    // Strengths template
+    `Your essay is engaging and well written! Here are some strengths in your language use:\n\n${strengthsText}\n\nTo further improve your essay, I’ve listed three areas to work on. Click **NEXT** to see them.`,
+    // Area One
+    `**Area One**:\n${area1}`,
+    // Area Two
+    `**Area Two**:\n${area2}`,
+    // Area Three
+    `**Area Three**:\n${area3}`,
+  ];
+
+  // initialize visited tracker (false for each part)
+  state.feedbackVisited = state.feedbackParts.map(() => false);
+  state.feedbackIndex = 0;
+
+  renderFeedbackPart();
+
+  // Hide rating overlay if present
   hideRatingOverlay();
-  hideRatingThanks();
-  // Controls
-  if (btnProceedContent) btnProceedContent.style.display = "inline-block";
-  if (btnSubmitFinal) btnSubmitFinal.style.display = "none";
-  // bind guards
+
+  // Initially hide Submit button until areas 1..3 have been viewed
+  if (btnSubmit) {
+    btnSubmit.style.display = "none";
+    btnSubmit.disabled = false;
+  }
+
+  // record start time (ms)
+  state.revisionStart = Date.now();
+
+  // bind guards for editor
   bindWriteTextareaGuards();
+}
+
+/* Render the current feedback part into the feedbackPanel */
+function renderFeedbackPart() {
+  if (!feedbackPanel) return;
+  const idx = state.feedbackIndex ?? 0;
+  const raw = state.feedbackParts[idx] ?? "";
+
+  // Mark this index as visited
+  state.feedbackVisited[idx] = true;
+
+  // Convert **bold** markers into safe bold HTML while escaping other content
+  // First escape full raw text, then convert escaped **text** sequences into <strong>
+  const escaped = escapeHtml(raw);
+  const withBold = escaped.replace(/\\*\\*(.+?)\\*\\*/g, (m, p1) => `**${p1}**`); // defensive no-op if not needed
+  // Now replace **...** tokens with <strong> around already-escaped content
+  const html = escaped.replace(/\*\*(.+?)\*\*/g, (_, p1) => `<strong>${escapeHtml(p1)}</strong>`).replace(/\n/g, "<br>");
+
+  feedbackPanel.innerHTML = html;
+
+  // Back / Next button visibility rules:
+  if (btnFeedbackBack) btnFeedbackBack.style.display = (idx === 0 ? "none" : "inline-block");
+  if (btnFeedbackNext) btnFeedbackNext.style.display = (idx >= state.feedbackParts.length - 1 ? "none" : "inline-block");
+
+  // Check if all three area parts (indexes 1..3) have been viewed at least once
+  const areasViewed = state.feedbackVisited[1] && state.feedbackVisited[2] && state.feedbackVisited[3];
+  if (btnSubmit) {
+    if (areasViewed) {
+      btnSubmit.style.display = "block"; // show centered by CSS rule
+    } else {
+      btnSubmit.style.display = "none";
+    }
+  }
+}
+
+/* escape helper to prevent HTML injection */
+function escapeHtml(str) {
+  if (str == null) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }
 
 /* Prevent copy/paste and context menu on draft editor */
@@ -142,11 +220,25 @@ function bindWriteTextareaGuards() {
   });
 }
 
-/* ---------------------- Proceed to rating (floating overlay) ---------------------- */
-btnProceedContent?.addEventListener("click", async () => {
+/* ---------------------- Feedback navigation handlers ---------------------- */
+btnFeedbackBack?.addEventListener("click", () => {
+  if (state.feedbackIndex > 0) {
+    state.feedbackIndex -= 1;
+    renderFeedbackPart();
+  }
+});
+
+btnFeedbackNext?.addEventListener("click", () => {
+  if (state.feedbackIndex < state.feedbackParts.length - 1) {
+    state.feedbackIndex += 1;
+    renderFeedbackPart();
+  }
+});
+
+/* ---------------------- Submit -> rating (floating overlay) ---------------------- */
+btnSubmit?.addEventListener("click", async () => {
   const proceed = confirm("Are you sure you have completed your language revision and are ready to rate the language feedback?");
   if (!proceed) return;
-
   // Show the floating rating overlay
   showRatingOverlay();
 });
@@ -155,13 +247,11 @@ btnProceedContent?.addEventListener("click", async () => {
 /* Show / hide helpers */
 function showRatingOverlay() {
   if (!ratingOverlay) return;
-  // clear previous selection
   likertFloating?.querySelectorAll(".circle").forEach(c => c.classList.remove("selected"));
   state.languageRating = null;
   if (btnSubmitMyRating) btnSubmitMyRating.disabled = false;
   ratingOverlay.style.display = "block";
   ratingOverlay.setAttribute("aria-hidden", "false");
-  // center it visually
   ratingOverlay.style.left = "50%";
   ratingOverlay.style.top = "50%";
   ratingOverlay.style.transform = "translate(-50%, -50%)";
@@ -173,18 +263,6 @@ function hideRatingOverlay() {
   ratingOverlay.setAttribute("aria-hidden", "true");
 }
 
-function showRatingThanks() {
-  if (!ratingThanks) return;
-  ratingThanks.style.display = "block";
-  ratingThanks.setAttribute("aria-hidden", "false");
-}
-
-function hideRatingThanks() {
-  if (!ratingThanks) return;
-  ratingThanks.style.display = "none";
-  ratingThanks.setAttribute("aria-hidden", "true");
-}
-
 /* Handle selection inside floating likert using event delegation */
 likertFloating?.addEventListener("click", (e) => {
   const el = e.target.closest?.(".circle");
@@ -194,7 +272,7 @@ likertFloating?.addEventListener("click", (e) => {
   state.languageRating = parseInt(el.dataset.value, 10);
 });
 
-/* Submit My Rating -> call backend and show thanks overlay */
+/* Submit My Rating -> call backend and then finish (thanks page) */
 btnSubmitMyRating?.addEventListener("click", async () => {
   if (!state.languageRating) {
     alert("Please select a rating (1–5) before submitting.");
@@ -207,54 +285,18 @@ btnSubmitMyRating?.addEventListener("click", async () => {
   btnSubmitMyRating.disabled = true;
   try {
     const languageRevisionText = (draftEditor.value || "").trim();
-    await completeLanguage(state.sessionId, languageRevisionText, state.languageRating);
-    // hide overlay and show thanks
+    const now = Date.now();
+    let revisionDurationSeconds = null;
+    if (state.revisionStart) {
+      revisionDurationSeconds = Math.max(0, (now - state.revisionStart) / 1000);
+    }
+    await completeLanguage(state.sessionId, languageRevisionText, state.languageRating, revisionDurationSeconds);
     hideRatingOverlay();
-    showRatingThanks();
+    show(screens.thanks);
   } catch (err) {
     alert(err.message || "Failed to submit rating. Please try again.");
   } finally {
     btnSubmitMyRating.disabled = false;
-  }
-});
-
-/* After OK on the "Thanks" overlay -> swap to content revision */
-btnRatingOk?.addEventListener("click", () => {
-  hideRatingThanks();
-
-  // Replace feedback with content feedback
-  if (feedbackBox) feedbackBox.value = state.draft?.content_feedback || "";
-
-  // Update instruction and title
-  if (revTitle) revTitle.textContent = "Content Revision";
-  if (revInstruction) {
-    revInstruction.textContent = "Now, you will have another 10 minutes to revise the content of your draft using the content-focused feedback provided.";
-  }
-
-  // Swap controls
-  if (btnProceedContent) btnProceedContent.style.display = "none";
-  if (btnSubmitFinal) btnSubmitFinal.style.display = "inline-block";
-
-  state.mode = "content";
-});
-
-/* ---------------------- Final submit ---------------------- */
-btnSubmitFinal?.addEventListener("click", async () => {
-  const proceed = confirm("Are you sure you want to submit your revised version?");
-  if (!proceed) return;
-  if (!state.sessionId) {
-    alert("Missing session. Please restart.");
-    return;
-  }
-  btnSubmitFinal.disabled = true;
-  try {
-    const contentRevisionText = (draftEditor.value || "").trim();
-    await submitContent(state.sessionId, contentRevisionText);
-    show(screens.thanks);
-  } catch (err) {
-    alert(err.message || "Failed to submit final revision.");
-  } finally {
-    btnSubmitFinal.disabled = false;
   }
 });
 
@@ -325,7 +367,6 @@ btnSubmitFinal?.addEventListener("click", async () => {
 
 /* ---------------------- Initialize visual styles for circles ---------------------- */
 document.addEventListener("DOMContentLoaded", () => {
-  // style floating overlay circles (if present)
   document.querySelectorAll("#likertFloating .circle").forEach(c => {
     c.style.width = "44px";
     c.style.height = "44px";
@@ -340,7 +381,6 @@ document.addEventListener("DOMContentLoaded", () => {
     c.style.userSelect = "none";
   });
 
-  // Add selected CSS class if not already defined
   const style = document.createElement("style");
   style.textContent = `
     #likertFloating .circle.selected { background: var(--accent); color: #052e16; }
@@ -348,7 +388,6 @@ document.addEventListener("DOMContentLoaded", () => {
   `;
   document.head.appendChild(style);
 
-  // Ensure only the login screen is active on initial load if none set
   if (!document.querySelector(".screen.active")) {
     const first = document.getElementById("screen-login");
     if (first) first.classList.add("active");

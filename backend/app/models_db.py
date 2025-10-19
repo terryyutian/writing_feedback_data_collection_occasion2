@@ -1,4 +1,5 @@
-from sqlalchemy import Column, String, Integer, Boolean, DateTime, Text, ForeignKey, UniqueConstraint
+# backend/app/models_db.py
+from sqlalchemy import Column, String, Integer, Boolean, DateTime, Text, ForeignKey, UniqueConstraint, Float
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from datetime import datetime, timezone
 import uuid
@@ -23,7 +24,12 @@ class Draft(Base):
     asurite: Mapped[str] = mapped_column(String, ForeignKey("participants.asurite"), nullable=False, index=True)
 
     essay_text: Mapped[str] = mapped_column(Text, default="", nullable=False)
-    language_feedback: Mapped[str] = mapped_column(Text, default="", nullable=False)
+    # NEW: split feedback into strengths + 3 improvement areas
+    feedback_strengths: Mapped[str] = mapped_column(Text, default="", nullable=False)
+    feedback_area1: Mapped[str] = mapped_column(Text, default="", nullable=False)
+    feedback_area2: Mapped[str] = mapped_column(Text, default="", nullable=False)
+    feedback_area3: Mapped[str] = mapped_column(Text, default="", nullable=False)
+
     content_feedback: Mapped[str] = mapped_column(Text, default="", nullable=False)
 
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
@@ -48,6 +54,8 @@ class Revision(Base):
 
     language_revision_text: Mapped[str] = mapped_column(Text, default="", nullable=True)
     language_rating: Mapped[int] = mapped_column(Integer, nullable=True)  # 1..5
+    language_revision_duration_seconds: Mapped[float] = mapped_column(Float, nullable=True)
+
     content_revision_text: Mapped[str] = mapped_column(Text, default="", nullable=True)
 
     submitted_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)

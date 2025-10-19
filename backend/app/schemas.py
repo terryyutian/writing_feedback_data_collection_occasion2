@@ -1,3 +1,4 @@
+# backend/app/schemas.py
 from pydantic import BaseModel, Field, EmailStr
 from typing import Optional
 from datetime import datetime
@@ -14,7 +15,11 @@ class DraftOut(BaseModel):
     draft_id: int
     asurite: str
     essay_text: str
-    language_feedback: str
+    # bifurcated feedback
+    feedback_strengths: str
+    feedback_area1: str
+    feedback_area2: str
+    feedback_area3: str
     content_feedback: str
 
 class StartSessionIn(BaseModel):
@@ -31,10 +36,7 @@ class LanguageCompleteIn(BaseModel):
     session_id: str
     language_revision_text: str = ""
     language_rating: int = Field(..., ge=1, le=5)
-
-class ContentSubmitIn(BaseModel):
-    session_id: str
-    content_revision_text: str = ""
+    revision_duration_seconds: Optional[float] = None
 
 class RevisionStatusOut(BaseModel):
     session_id: str

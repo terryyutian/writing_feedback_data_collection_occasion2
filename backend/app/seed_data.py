@@ -1,46 +1,117 @@
-# Run this script (python -m app.seed_data) or import from main on first run.
+# backend/app/seed_data.py
+"""
+Seed script for the Writing Revision app.
+
+Run from the repository root as:
+    python -m backend.app.seed_data
+
+This will:
+ - ensure tables exist (Base.metadata.create_all)
+ - insert a few sample participants + drafts (if not already present)
+ - print inserted rows for quick verification
+"""
+
+from sqlalchemy.exc import IntegrityError
 from .db import SessionLocal, engine, Base
-from . import models_db as models
+from .models_db import Participant, Draft
+from .config import settings
 from datetime import datetime, timezone
 
-def seed():
+SAMPLES = [
+    {
+        "asurite": "student1",
+        "essay_text": (
+            "Last summer I had an experience that changed my approach to learning. "
+            "I volunteered at a community center and taught children to code. "
+            "The joy I saw made me want to teach more."
+        ),
+        "feedback_strengths": (
+            "Clear opening sentence and a personal anecdote that draws the reader in. "
+            "Varied sentence structure in places and appropriate word choice overall."
+        ),
+        "feedback_area1": "Reduce sentence run-ons in the middle paragraph and break them into two sentences.",
+        "feedback_area2": "Add more specific examples of a challenge you faced while teaching to strengthen the narrative.",
+        "feedback_area3": "Watch for small verb tense shifts (e.g., 'made' vs 'has made').",
+       
+    },
+    {
+        "asurite": "student2",
+        "essay_text": (
+            "During my internship I learned the value of persistence. I was assigned a difficult dataset "
+            "and at first I couldn't clean it, but with help I succeeded."
+        ),
+        "feedback_strengths": (
+            "Good thematic focus on persistence and a clear arc: problem → struggle → resolution."
+        ),
+        "feedback_area1": "Improve transitions between sentences to make the narrative flow more smoothly.",
+        "feedback_area2": "Vary sentence openings; avoid repeating 'I' at the start of multiple sentences.",
+        "feedback_area3": "Expand on one specific technical challenge to give the reader more context.",
+           },
+    {
+        "asurite": "student3",
+        "essay_text": (
+            "My team project in school taught me how to communicate under pressure. "
+            "We had to present after only a week of preparation, which forced us to prioritize."
+        ),
+        "feedback_strengths": "Strong focus and concise writing. The reader can follow the progression easily.",
+        "feedback_area1": "Provide more descriptive details about the prioritization decisions you made.",
+        "feedback_area2": "Avoid passive voice in some sentences to increase clarity.",
+        "feedback_area3": "Check punctuation around clauses (commas vs semicolons).",
+    }
+]
+
+
+def ensure_tables():
+    """Create DB tables if they don't exist yet."""
     Base.metadata.create_all(bind=engine)
+
+
+def seed():
+    ensure_tables()
     db = SessionLocal()
     try:
-        # only create if participants table is empty
-        if db.query(models.Participant).count() == 0:
-            entries = [
-                {
-                    "asurite": "student1",
-                    "essay_text": "When I moved to a new city, I learned to rely on myself...",
-                    "language_feedback": "Fix verb tense consistency and reduce sentence fragments.",
-                    "content_feedback": "Add more details about the climax and consequences of the event."
-                },
-                {
-                    "asurite": "student2",
-                    "essay_text": "My first job taught me responsibility and time management...",
-                    "language_feedback": "Eliminate passive voice and clarify pronoun references.",
-                    "content_feedback": "Consider adding specific examples that show growth."
-                },
-                {
-                    "asurite": "student3",
-                    "essay_text": "The volunteer trip was eye-opening and changed my perspective...",
-                    "language_feedback": "Vary sentence openings and tighten wordy phrases.",
-                    "content_feedback": "Expand on why the experience mattered and what actions followed."
-                },
-            ]
-            for e in entries:
-                p = models.Participant(asurite=e["asurite"])
-                db.add(p)
-                db.flush()
-                d = models.Draft(asurite=e["asurite"], essay_text=e["essay_text"],
-                                 language_feedback=e["language_feedback"],
-                                 content_feedback=e["content_feedback"])
-                db.add(d)
-            db.commit()
+        inserted = []
+        for s in SAMPLES:
+            asurite = (s["asurite"] or "").strip().lower()
+            # check if participant exists
+            participant = db.get(Participant, asurite)
+            if participant is None:
+                participant = Participant(asurite=asurite)
+                db.add(participant)
+                db.flush()  # ensure the PK available
+
+            # check if draft exists for this asurite
+            existing = db.query(Draft).filter(Draft.asurite == asurite).first()
+            if existing:
+                print(f"[skip] draft already exists for {asurite} (id={existing.id})")
+                continue
+
+            draft = Draft(
+                asurite=asurite,
+                essay_text=s["essay_text"],
+                feedback_strengths=s.get("feedback_strengths", ""),
+                feedback_area1=s.get("feedback_area1", ""),
+                feedback_area2=s.get("feedback_area2", ""),
+                feedback_area3=s.get("feedback_area3", ""),
+                created_at=datetime.now(timezone.utc),
+            )
+            db.add(draft)
+            db.flush()
+            inserted.append((asurite, draft.id))
+
+        db.commit()
+        if inserted:
+            print("Inserted drafts for:", ", ".join(f"{a} (id={i})" for a, i in inserted))
+        else:
+            print("No new drafts inserted.")
+    except IntegrityError as e:
+        db.rollback()
+        print("Integrity error while seeding:", e)
     finally:
         db.close()
 
+
 if __name__ == "__main__":
+    print("Running seed_data.py — DB URL:", settings.DATABASE_URL)
     seed()
-    print("Seeded database.")
+    print("Done.")

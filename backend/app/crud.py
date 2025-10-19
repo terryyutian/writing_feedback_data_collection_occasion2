@@ -47,7 +47,7 @@ def _as_utc(dt):
         return dt.replace(tzinfo=timezone.utc)
     return dt.astimezone(timezone.utc)
 
-def save_language_completion(db: Session, session_id: str, language_revision_text: str, language_rating: int):
+def save_language_completion(db: Session, session_id: str, language_revision_text: str, language_rating: int, revision_duration_seconds: float | None = None):
     session = db.get(models.WritingSession, session_id)
     if session is None:
         raise ValueError("Invalid session_id")
@@ -58,24 +58,11 @@ def save_language_completion(db: Session, session_id: str, language_revision_tex
         db.add(rev)
     rev.language_revision_text = language_revision_text or ""
     rev.language_rating = int(language_rating)
+    if revision_duration_seconds is not None:
+        try:
+            rev.language_revision_duration_seconds = float(revision_duration_seconds)
+        except Exception:
+            rev.language_revision_duration_seconds = None
     db.commit()
     db.refresh(rev)
-    return rev
-
-def submit_content_revision(db: Session, session_id: str, content_revision_text: str):
-    session = db.get(models.WritingSession, session_id)
-    if session is None:
-        raise ValueError("Invalid session_id")
-    if session.submitted_at is not None:
-        raise ValueError("Session already submitted")
-    rev = db.scalar(select(models.Revision).where(models.Revision.session_id == session.id))
-    if rev is None:
-        raise ValueError("Revision record missing")
-    rev.content_revision_text = content_revision_text or ""
-    now = datetime.now(timezone.utc)
-    rev.submitted_at = now
-    session.submitted_at = now
-    db.commit()
-    db.refresh(rev)
-    db.refresh(session)
     return rev
