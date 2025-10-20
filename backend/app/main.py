@@ -16,6 +16,11 @@ from .schemas import (
 )
 from . import crud, models_db as models
 
+# new imports for normalization
+import json
+import re
+from typing import Any
+
 # Logging
 logging.basicConfig(
     format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
@@ -44,6 +49,66 @@ def get_db():
         db.close()
 
 # ------------------------
+# Helpers
+# ------------------------
+def normalize_essay_text(raw: Any) -> str:
+    """
+    Normalize essay text stored in the DB.
+    Accepts:
+      - a plain string with \n paragraph separators (single or double)
+      - a Python list/tuple of paragraphs
+      - bytes
+    Returns a single string with paragraphs separated by double newlines ("\n\n").
+    """
+    if raw is None:
+        return ""
+
+    # If it's already a list/tuple, join them into paragraphs
+    if isinstance(raw, (list, tuple)):
+        parts = [str(p).strip() for p in raw if p is not None]
+        return "\n\n".join(p for p in parts if p != "")
+
+    # If it's bytes, decode
+    if isinstance(raw, (bytes, bytearray)):
+        try:
+            raw = raw.decode("utf-8")
+        except Exception:
+            raw = str(raw)
+
+    text = str(raw)
+
+    # Heuristic: If it looks like a JSON array, try parsing it (defensive)
+    s = text.strip()
+    if s.startswith("[") and s.endswith("]"):
+        try:
+            parsed = json.loads(s)
+            if isinstance(parsed, list):
+                parts = [str(p).strip() for p in parsed if p is not None]
+                return "\n\n".join(p for p in parts if p != "")
+        except Exception:
+            pass  # fall back to plain text handling
+
+    # Normalize CRLF -> LF
+    text = text.replace("\r\n", "\n").replace("\r", "\n")
+
+    # If there are NO double-newlines but there ARE single newlines,
+    # assume single newlines mark paragraphs and convert them to double-newlines.
+    # This handles datasets that use "\n" between paragraphs.
+    if "\n\n" not in text and "\n" in text:
+        # But avoid converting single newlines that are clearly within sentences:
+        # Simple approach: convert every single newline to two newlines.
+        # (If you have wrapped lines inside paragraphs this may create extra paras.)
+        text = text.replace("\n", "\n\n")
+
+    # Replace any sequences of 3+ newlines with exactly 2 (normalize)
+    text = re.sub(r"\n{3,}", "\n\n", text)
+
+    # Trim leading/trailing whitespace
+    text = text.strip()
+
+    return text
+
+# ------------------------
 # Simple health
 # ------------------------
 @app.get("/health", response_model=MessageOut)
@@ -65,24 +130,31 @@ def post_login(payload: LoginIn, db: Session = Depends(get_db)) -> LoginOut:
 # ------------------------
 # Fetch draft & feedback
 # ------------------------
-
 @app.get("/api/draft/{asurite}", response_model=DraftOut)
 def get_draft(asurite: str, db: Session = Depends(get_db)) -> DraftOut:
     asurite = (asurite or "").strip().lower()
     draft = crud.find_draft_by_asurite(db, asurite)
     if draft is None:
         raise HTTPException(status_code=404, detail="Draft not found")
+
+    # Normalize essay_text so paragraphs are preserved as "\n\n"
+    essay_raw = getattr(draft, "essay_text", "") or ""
+    essay = normalize_essay_text(essay_raw)
+
+    # get prompt_type (default to empty string if missing)
+    ptype = getattr(draft, "prompt_type", "") or ""
+
     return DraftOut(
         draft_id=draft.id,
         asurite=draft.asurite,
-        essay_text=draft.essay_text,
+        essay_text=essay,
         feedback_strengths=getattr(draft, "feedback_strengths", "") or "",
         feedback_area1=getattr(draft, "feedback_area1", "") or "",
         feedback_area2=getattr(draft, "feedback_area2", "") or "",
         feedback_area3=getattr(draft, "feedback_area3", "") or "",
         content_feedback=getattr(draft, "content_feedback", "") or "",
+        prompt_type=ptype,
     )
-
 # ------------------------
 # Start session
 # ------------------------

@@ -21,6 +21,8 @@ class DraftOut(BaseModel):
     feedback_area2: str
     feedback_area3: str
     content_feedback: str
+    # NEW: prompt_type (useful for downstream analysis)
+    prompt_type: Optional[str] = ""
 
 class StartSessionIn(BaseModel):
     asurite: str

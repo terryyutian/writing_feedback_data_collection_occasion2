@@ -72,12 +72,43 @@ btnLogin?.addEventListener("click", async () => {
     // fetch draft
     const draft = await fetchDraft(state.asurite);
     state.draft = draft;
+
+    // Render draft with paragraph support (split on two-or-more newlines)
     const draftBox = document.getElementById("draftBox");
-    if (draftBox) draftBox.textContent = draft.essay_text || "";
+    if (draftBox) {
+      draftBox.innerHTML = ""; // clear existing
+      const text = draft.essay_text || "";
+      // Split into paragraphs on 2+ newlines and trim each
+      const paras = (text || "").split(/\n{2,}/).map(p => p.trim()).filter(Boolean);
+      if (paras.length === 0) {
+        const p = document.createElement("p");
+        p.textContent = "";
+        draftBox.appendChild(p);
+      } else {
+        for (const para of paras) {
+          const p = document.createElement("p");
+          p.textContent = para; // safe insertion
+          draftBox.appendChild(p);
+        }
+      }
+    }
+
     show(screens.confirm);
-  } catch (err) {
-    alert(err.message || "Login failed. Please contact researchers.");
-  } finally { btnLogin.disabled = false; }
+    } catch (err) {
+      // Normalize message
+      let msg = "Login failed. Please contact researchers.";
+      if (err && typeof err.message === "string" && err.message.trim() !== "") {
+        // if backend returned a 404, show a friendly message
+        if (err.message.includes("Participant or draft not found")) {
+          msg = "Hmm, we couldn’t find an account with that email address. Please check and try again.";
+        } else {
+          msg = err.message;
+        }
+      }
+      alert(msg);
+    } finally {
+      btnLogin.disabled = false;
+    }
 });
 
 /* ---------------------- Confirm flow ---------------------- */
@@ -116,7 +147,7 @@ function setupRevisionPage() {
     revInstruction.textContent = "Now, you will have 10 minutes to improve the language in your draft. In this step, focus only on enhancing language quality using the language-focused feedback provided.";
   }
 
-  // Populate draft text
+  // Populate draft text in editable textarea (preserve newlines)
   if (draftEditor) draftEditor.value = state.draft?.essay_text || "";
 
   // Build feedback parts array from draft fields (use safe textContent for dynamic parts)
@@ -168,11 +199,9 @@ function renderFeedbackPart() {
   state.feedbackVisited[idx] = true;
 
   // Convert **bold** markers into safe bold HTML while escaping other content
-  // First escape full raw text, then convert escaped **text** sequences into <strong>
   const escaped = escapeHtml(raw);
-  const withBold = escaped.replace(/\\*\\*(.+?)\\*\\*/g, (m, p1) => `**${p1}**`); // defensive no-op if not needed
-  // Now replace **...** tokens with <strong> around already-escaped content
-  const html = escaped.replace(/\*\*(.+?)\*\*/g, (_, p1) => `<strong>${escapeHtml(p1)}</strong>`).replace(/\n/g, "<br>");
+  // Replace **...** tokens (on escaped text) with <strong> around the already-escaped content
+  const html = escaped.replace(/\*\*(.+?)\*\*/g, (_, p1) => `<strong>${p1}</strong>`).replace(/\n/g, "<br>");
 
   feedbackPanel.innerHTML = html;
 

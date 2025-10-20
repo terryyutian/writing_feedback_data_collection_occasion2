@@ -32,6 +32,9 @@ class Draft(Base):
 
     content_feedback: Mapped[str] = mapped_column(Text, default="", nullable=False)
 
+    # NEW: prompt_type for analysis (e.g., 'combined', 'rubric', etc.)
+    prompt_type: Mapped[str] = mapped_column(String, default="", nullable=False, index=True)
+
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
 
     participant = relationship("Participant", back_populates="drafts")

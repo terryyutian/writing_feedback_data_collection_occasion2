@@ -35,7 +35,7 @@
         <div class="container">
           <div class="card">
             <h2>Confirm Draft</h2>
-             <p style="margin-top:12px;">Last month at our Orientation, you wrote about a previous experience in your life that served as a pivotal moment. Is the essay below you drafted?</p>
+             <p style="margin-top:12px;">Last month at our Orientation, you wrote about a previous experience in your life that served as a pivotal moment. <strong>Is the essay shown below the one you wrote?</strong></p>
             <div class="box" id="draftBox" style="white-space:pre-wrap"></div>
 
             <div class="center" style="gap:12px;display:flex;">
@@ -52,10 +52,15 @@
           <div class="card">
             <h2>Draft Revision Instructions</h2>
             <div class="passage">
-              <p>In this activity, you will revise your essay draft in the following steps:</p>
-              <p><strong>Step 1:</strong> You will have 10 minutes to improve the language in your draft. In this step, focus only on enhancing language quality using the language-focused feedback provided.</p>
-              <p><strong>Step 2:</strong> After completing your language revisions, you will be asked to rate how effective the language-focused feedback was in helping you improve your draft.</p>
-              <p>After you submit your rating, your session will be recorded and you will be finished — thank you for participating.</p>
+              <p>In this activity, you will revise your essay draft by following the steps below:</p>
+
+              <p><strong>Step 1:</strong> You will have about 10 minutes to revise your draft, focusing only on improving language quality. Use the language-focused feedback provided to guide your revisions.</p>
+
+              <p><strong>Step 2:</strong> After finishing your language revisions, you will rate how helpful the feedback was in improving your draft.</p>
+
+              <p>Once you submit your rating, your participation will be complete. </p>
+
+              <p><em>Note:</em> Please do not use any AI writing tools during your revision.</p>
             </div>
             <div class="right" style="margin-top:12px;">
               <button id="btnInstrAgree" class="primary">I Agree — Start</button>
@@ -91,8 +96,20 @@
             </div>
 
             <div class="field" style="margin-top:16px;">
-              <label>Your Draft (editable)</label>
-              <textarea id="draftEditor" placeholder="Edit your draft here..." maxlength="20000"></textarea>
+              <label>Revise Your Draft Below Based on the Feedback</label>
+              <textarea
+                id="draftEditor"
+                placeholder="Edit your draft here..."
+                maxlength="20000"
+                spellcheck="false"
+                autocomplete="off"
+                autocorrect="off"
+                autocapitalize="off"
+                data-gramm="false"
+                data-gramm_editor="false"
+                data-enable-grammarly="false"
+              ></textarea>
+
             </div>
 
             <!-- Controls -->

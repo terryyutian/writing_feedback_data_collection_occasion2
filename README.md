@@ -9,7 +9,7 @@ python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 # seed the DB
-python -m app.seed_data
+python -m app.ingest_data
 uvicorn app.main:app --reload --port 8000
 ```
 

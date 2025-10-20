@@ -63,6 +63,19 @@ def save_language_completion(db: Session, session_id: str, language_revision_tex
             rev.language_revision_duration_seconds = float(revision_duration_seconds)
         except Exception:
             rev.language_revision_duration_seconds = None
+
+    # set submitted timestamps for session and revision
+    now_utc = _as_utc(datetime.now())
+    try:
+        session.submitted_at = now_utc
+    except Exception:
+        # defensive: in case the attribute doesn't exist or is None (shouldn't happen)
+        pass
+    try:
+        rev.submitted_at = now_utc
+    except Exception:
+        pass
+
     db.commit()
     db.refresh(rev)
     return rev
