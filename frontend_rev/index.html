@@ -10,7 +10,7 @@
 <body>
   <div id="app">
     <header class="site-header">
-      <h1>Study: Revision Session — Language & Content</h1>
+      <h1>Study: Revision Session — Language</h1>
     </header>
 
     <main>
@@ -18,16 +18,11 @@
       <section id="screen-login" class="screen active">
         <div class="container">
           <div class="card">
-            <!-- Title centered by CSS -->
             <h2>Login</h2>
-
-            <!-- Centered content -->
             <div class="field center-field">
               <label for="loginEmail">Please provide your ASU email address</label>
-              <!-- enlarged input -->
               <input id="loginEmail" class="large-input" type="email" autocomplete="email" />
             </div>
-
             <div id="loginControls" class="center">
               <button id="btnLogin" class="primary">Continue</button>
             </div>
@@ -40,7 +35,7 @@
         <div class="container">
           <div class="card">
             <h2>Confirm Draft</h2>
-             <p style="margin-top:12px;">Last month at our Orientation, you wrote about a previous experience in your life that served as a pivotal moment. Is the essay below you drafted?</p>
+             <p style="margin-top:12px;">Last month at our Orientation, you wrote about a previous experience in your life that served as a pivotal moment. <strong>Is the essay shown below the one you wrote?</strong></p>
             <div class="box" id="draftBox" style="white-space:pre-wrap"></div>
 
             <div class="center" style="gap:12px;display:flex;">
@@ -57,10 +52,13 @@
           <div class="card">
             <h2>Draft Revision Instructions</h2>
             <div class="passage">
-              <p>In this activity, you will revise your essay draft in the following steps:</p>
-              <p><strong>Step 1:</strong> You will have 10 minutes to improve the language in your draft. In this step, focus only on enhancing language quality using the language-focused feedback provided.</p>
-              <p><strong>Step 2:</strong> After completing your language revisions, you will be asked to rate how effective the language-focused feedback was in helping you improve your draft.</p>
-              <p><strong>Step 3:</strong> Next, you will have another 10 minutes to revise the content of your draft using the content-focused feedback provided.</p>
+              <p>In this activity, you will revise your essay draft by following the steps below:</p>
+
+              <p><strong>Step 1:</strong> You will have about 10 minutes to revise your draft, focusing only on improving language quality. Use the language-focused feedback provided to guide your revisions.</p>
+
+              <p><strong>Step 2:</strong> After finishing your language revisions, you will rate how helpful the feedback was in improving your draft.</p>
+
+              <p><em>Note:</em> Please do not use any AI writing tools during your revision.</p>
             </div>
             <div class="right" style="margin-top:12px;">
               <button id="btnInstrAgree" class="primary">I Agree — Start</button>
@@ -69,91 +67,102 @@
         </div>
       </section>
 
-    <!-- Page: Language / Content Revision -->
-    <section id="screen-revision" class="screen">
-    <div class="container">
-        <div class="card">
-        <h2 id="revTitle">Language Revision</h2>
+      <!-- Page: Language Revision -->
+      <section id="screen-revision" class="screen">
+        <div class="container">
+          <div class="card">
+            <h2 id="revTitle">Language Revision</h2>
 
-        <!-- ONE-LINE INSTRUCTION that changes between phases -->
-        <p id="revInstruction" class="passage" style="text-align:left; margin-bottom:12px;">
-            Now, you will have 10 minutes to improve the language in your draft. In this step, focus only on enhancing language quality using the language-focused feedback provided.
-        </p>
+            <p id="revInstruction" class="passage" style="text-align:left; margin-bottom:12px;">
+              Now, you will have 10 minutes to improve the language in your draft. In this step, focus only on enhancing language quality using the language-focused feedback provided.
+            </p>
 
-        <div class="field">
-            <label>Feedback (read-only)</label>
-            <textarea id="feedbackBox" readonly></textarea>
+            <div class="field">
+              <!-- Centered title above the feedback panel -->
+              <div id="feedbackTitle" class="feedback-title">Language Feedback (Read-only)</div>
+
+              <!-- Standalone feedback panel (80% width) -->
+              <div id="feedbackPanel" role="region" aria-live="polite" aria-label="Language feedback"></div>
+
+              <!-- Feedback navigation buttons (moved outside the panel) -->
+              <div class="feedback-nav" aria-hidden="false" style="margin-top:12px;">
+                <div style="display:flex; justify-content:center; gap:12px;">
+                  <button id="btnFeedbackBack" class="secondary" style="display:none;">BACK</button>
+                  <button id="btnFeedbackNext" class="primary" style="display:inline-block;">NEXT</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="field" style="margin-top:16px;">
+              <label>Revise Your Draft Below Based on the Feedback</label>
+              <textarea
+                id="draftEditor"
+                placeholder="Edit your draft here..."
+                maxlength="20000"
+                spellcheck="false"
+                autocomplete="off"
+                autocorrect="off"
+                autocapitalize="off"
+                data-gramm="false"
+                data-gramm_editor="false"
+                data-enable-grammarly="false"
+              ></textarea>
+
+            </div>
+
+            <!-- Controls -->
+            <div class="right" style="margin-top:12px;">
+              <button id="btnProceedContent" class="primary">Submit</button>
+            </div>
+          </div>
         </div>
 
-        <div class="field">
-            <label>Your Draft (editable)</label>
-            <textarea id="draftEditor" placeholder="Edit your draft here..." maxlength="20000"></textarea>
+        <!-- Floating draggable rating overlay (unchanged) -->
+        <div id="ratingOverlay" class="floating-overlay" aria-hidden="true" style="display:none;">
+          <div id="ratingHandle" class="floating-handle">Drag</div>
+          <div class="floating-body">
+            <div style="padding:12px; text-align:center;">
+              <div style="font-weight:700; margin-bottom:8px;">
+                How effective was the feedback in improving the language quality of your draft?
+              </div>
+
+              <div id="likertFloating" style="display:flex; justify-content:space-between; align-items:center; gap:32px; max-width:520px; margin:0 auto;">
+                <div style="text-align:center;">
+                  <div class="circle" data-value="1">1</div>
+                  <div class="muted small">Not effective at all</div>
+                </div>
+                <div style="text-align:center;">
+                  <div class="circle" data-value="2">2</div>
+                  <div class="muted small">Slightly effective</div>
+                </div>
+                <div style="text-align:center;">
+                  <div class="circle" data-value="3">3</div>
+                  <div class="muted small">Moderately effective</div>
+                </div>
+                <div style="text-align:center;">
+                  <div class="circle" data-value="4">4</div>
+                  <div class="muted small">Very effective</div>
+                </div>
+                <div style="text-align:center;">
+                  <div class="circle" data-value="5">5</div>
+                  <div class="muted small">Extremely effective</div>
+                </div>
+              </div>
+
+              <div style="margin-top:14px;">
+                <button id="btnSubmitMyRating" class="primary" style="display:inline-block;">Submit My Rating</button>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <!-- Controls -->
-        <div class="right" style="margin-top:12px;">
-            <button id="btnProceedContent" class="primary">Proceed</button>
-            <button id="btnSubmitFinal" class="primary" style="display:none;">Submit Revision</button>
-        </div>
-        </div>
-    </div>
-
-    <!-- Floating draggable rating overlay (hidden until needed) -->
-    <div id="ratingOverlay" class="floating-overlay" aria-hidden="true" style="display:none;">
-        <div id="ratingHandle" class="floating-handle">Drag</div>
-        <div class="floating-body">
-        <div style="padding:12px; text-align:center;">
-            <div style="font-weight:700; margin-bottom:8px;">
-            How effective was the feedback in improving the language quality of your draft?
-            </div>
-
-            <div id="likertFloating" style="display:flex; justify-content:space-between; align-items:center; gap:32px; max-width:520px; margin:0 auto;">
-            <div style="text-align:center;">
-                <div class="circle" data-value="1">1</div>
-                <div class="muted small">Not effective at all</div>
-            </div>
-            <div style="text-align:center;">
-                <div class="circle" data-value="2">2</div>
-                <div class="muted small">Slightly effective</div>
-            </div>
-            <div style="text-align:center;">
-                <div class="circle" data-value="3">3</div>
-                <div class="muted small">Moderately effective</div>
-            </div>
-            <div style="text-align:center;">
-                <div class="circle" data-value="4">4</div>
-                <div class="muted small">Very effective</div>
-            </div>
-            <div style="text-align:center;">
-                <div class="circle" data-value="5">5</div>
-                <div class="muted small">Extremely effective</div>
-            </div>
-            </div>
-
-            <div style="margin-top:14px;">
-            <button id="btnSubmitMyRating" class="primary" style="display:inline-block;">Submit My Rating</button>
-            </div>
-        </div>
-        </div>
-    </div>
-
-    <!-- Small follow-up floating confirmation after rating -->
-    <div id="ratingThanks" class="floating-overlay small" aria-hidden="true" style="display:none;">
-        <div class="floating-body" style="padding:18px; text-align:center;">
-        <div style="font-weight:700; margin-bottom:8px;">Thanks for your rating.</div>
-        <div style="margin-bottom:12px;">Now let's proceed to content revision.</div>
-        <button id="btnRatingOk" class="primary">OK</button>
-        </div>
-    </div>
-    </section>
-
-
+      </section>
       <!-- Page: Thank you -->
       <section id="screen-thanks" class="screen">
         <div class="container">
           <div class="card thanks">
             <h2>Thank you for your submission!</h2>
-            <p>Your revised essay has been recorded. You may now close this window.</p>
+            <p>Your revised essay and rating have been recorded. You may now close this window.</p>
           </div>
         </div>
       </section>

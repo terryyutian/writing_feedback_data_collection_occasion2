@@ -1,55 +1,112 @@
-/* ==== THEME (updated to match your consent template) ==== */
+/* ===========================
+   finalized frontend_rev/styles.css
+   ===========================
+   - Dark themed app UI
+   - Standalone feedback panel (80% width, light yellow, dark brown)
+   - Feedback title centered above panel
+   - BACK / NEXT buttons outside the panel (below)
+   - Draft editor with white background and black text
+   =========================== */
+
+/* -------- Theme variables -------- */
 :root{
-  --bg:#0f172a;
-  --card:#111827;
-  --muted:#94a3b8;
-  --text:#e5e7eb;
-  --accent:#22c55e;      /* green accent per template */
-  --warn:#f59e0b;
-  --danger:#ef4444;
-  --ring:#22c55e33;
+  --bg: #0f172a;
+  --card: #111827;
+  --muted: #94a3b8;
+  --text: #e5e7eb;
+  --accent: #22c55e;
+  --accent-dark: #052e16;
+  --feedback-yellow: #fff7c7;
+  --feedback-brown: #4b2e2e;
+  --feedback-title: #5a3e14;
+  --card-border: #1f2937;
+  --panel-border: #e7d7a1;
+  --glass: rgba(6,10,18,0.92);
 }
 
-/* base */
-*{box-sizing:border-box}
-body{
-  margin:0;background:linear-gradient(180deg,#0b1220,var(--bg));color:var(--text);
-  font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif
+/* -------- Base / Reset -------- */
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background: linear-gradient(180deg,#0b1220,var(--bg));
+  color: var(--text);
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.45;
 }
-.site-header{padding:24px;border-bottom:1px solid #1f2937;background:linear-gradient(180deg,#0b1220,#0f172a)}
-.site-header h1{margin:0;font-size:20px;font-weight:600;letter-spacing:.2px}
 
-main{max-width:1100px;margin:0 auto;padding:24px}
-
-.screen{display:none}
-.screen.active{display:block}
-
-h2{margin-top:0;font-size:22px}
-
-/* consent page template styles */
-.container{max-width:900px;margin:40px auto;padding:24px;background:linear-gradient(180deg,#0b1220,#0b1220)}
-.card{
-  background:linear-gradient(180deg,#0b1220,#0b1020);
-  border:1px solid #1f2937;border-radius:16px;padding:24px;
-  box-shadow:0 20px 40px rgba(0,0,0,.35), inset 0 0 0 1px #243145;
+/* -------- Layout & containers -------- */
+.site-header {
+  padding: 24px;
+  border-bottom: 1px solid #1f2937;
+  background: linear-gradient(180deg,#0b1220,#0f172a);
 }
-.right{text-align:right}
-.badge{display:inline-block;padding:4px 8px;border-radius:999px;background:#1f2937;color:var(--muted);font-size:12px}
-.passage{white-space:pre-wrap;line-height:1.6}
+.site-header h1 { margin: 0; font-size: 20px; font-weight: 600; letter-spacing: .2px; }
 
-/* Bigger, greener buttons */
+main { max-width: 1100px; margin: 0 auto; padding: 24px; }
+
+.screen { display: none; }
+.screen.active { display: block; }
+
+.container { max-width: 900px; margin: 40px auto; padding: 24px; background: linear-gradient(180deg,#0b1220,#0b1220); }
+.card {
+  background: linear-gradient(180deg,#0b1220,#0b1020);
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 20px 40px rgba(0,0,0,.35), inset 0 0 0 1px #243145;
+}
+.card h2 { margin-top: 0; font-size: 22px; text-align: center; }
+
+/* -------- Utilities -------- */
+.right { text-align: right; }
+.center { display:flex; justify-content:center; align-items:center; margin:24px 0; }
+.row { margin: 12px 0; }
+.badge { display:inline-block; padding:4px 8px; border-radius:999px; background:#1f2937; color:var(--muted); font-size:12px; }
+
+/* -------- Typography & prose -------- */
+.passage { white-space: normal; line-height: 1.45; }
+.passage p, .box p { margin: 0.5em 0; }
+h1, h2, h3 { margin: 0.4em 0 0.5em; }
+
+/* -------- Form fields -------- */
+.field {
+  background: var(--card);
+  padding: 16px;
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+  margin-bottom: 12px;
+}
+.field label { display:block; margin-bottom:8px; color:#d6dde5; font-weight:600; }
+
+/* inputs */
+input[type="text"], input[type="number"], input[type="email"] {
+  width:100%; padding:10px; border-radius:10px; border:1px solid #263245; background:#0b1220; color:var(--text);
+}
+
+/* centered large login input */
+.center-field { display:flex; flex-direction:column; align-items:center; gap:8px; }
+.large-input {
+  display:block; margin:0 auto; width:min(90%,800px); max-width:900px;
+  padding:14px 18px; font-size:1.125rem; border-radius:12px; border:1px solid #263245; background:#0b1220; color:var(--text);
+}
+#loginControls .primary { padding:14px 28px; font-size:16px; }
+
+/* -------- Buttons -------- */
 button, .primary {
-  background: var(--accent);   /* green */
-  color: #052e16;
+  background: var(--accent);
+  color: var(--accent-dark);
   border: none;
-  padding: 14px 22px;          /* larger */
-  font-size: 16px;             /* larger */
+  padding: 12px 18px;
+  font-size: 15px;
   border-radius: 12px;
   cursor: pointer;
   font-weight: 700;
-  box-shadow: 0 8px 24px rgba(34,197,94,.25);
+  box-shadow: 0 8px 24px rgba(34,197,94,.22);
 }
-button:hover, .primary:hover { filter: brightness(1.05); }
+button:hover, .primary:hover { filter: brightness(1.04); }
 button:active, .primary:active { transform: translateY(1px); }
 
 button.secondary {
@@ -58,266 +115,102 @@ button.secondary {
   box-shadow: none;
 }
 
-/* existing form/writing styles (kept) */
-.expander summary{cursor:pointer;color:var(--accent);font-weight:600}
-.expander-content{padding:8px 0 0 0;color:var(--text)}
+/* small/compact button */
+.small-btn { padding:8px 12px; font-size:14px; border-radius:10px; }
 
-.checkbox{display:flex;align-items:center;gap:10px;color:var(--text);margin:16px 0}
-.center{display:flex;justify-content:center;align-items:center;margin:24px 0}
-.primary{
-  background:var(--accent);color:#052e16;border:none;padding:10px 18px;border-radius:12px;
-  font-weight:700;cursor:pointer;box-shadow:0 6px 20px rgba(34,197,94,.25);
+/* focus outlines for accessibility */
+button:focus, input:focus, textarea:focus, [tabindex]:focus {
+  outline: 3px solid rgba(34,197,94,0.18);
+  outline-offset: 2px;
 }
 
-.form-grid{display:grid;gap:16px}
-.field{background:var(--card);padding:16px;border:1px solid #1f2937;border-radius:16px}
-.field label{display:block;margin-bottom:8px;color:#d6dde5}
-input[type="text"], input[type="number"]{
-  width:100%;padding:10px;border-radius:10px;border:1px solid #263245;background:#0b1220;color:var(--text)
-}
-
-.radio-group{display:grid;gap:8px;margin-top:8px}
-.radio-group label{display:flex;gap:8px;align-items:center;color:var(--muted)}
-
-.conditional.hidden, .conditional-group.hidden{display:none}
-
-.columns{display:grid;grid-template-columns: 1fr 2fr; gap:16px}
-.col .title{font-weight:700;margin-bottom:8px}
-.box{background:var(--card);padding:16px;border:1px solid #1f2937;border-radius:16px;max-height:70vh;overflow:auto}
-
-.writing textarea{
-  width:100%;min-height:70vh;padding:16px;border-radius:16px;border:1px solid #1f2937;background:#0b1220;color:var(--text);resize:vertical;
-}
-
-.thanks{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:50vh}
-.row{margin:12px 0}
-
-/* Small toolbar helpers for top-left/right page controls */
-.page-actions { display: flex; gap: 8px; margin-bottom: 8px; }
-.page-actions.left { justify-content: flex-start; }
-.page-actions.right { justify-content: flex-end; }
-
-/* --- Compact, natural text rhythm --- */
-
-/* Use normal whitespace flow inside prose blocks */
-.passage { 
-  white-space: normal;         /* was: pre-wrap */
-  line-height: 1.45;           /* slightly tighter than 1.6 */
-}
-
-/* Trim paragraph margins in prose & boxes */
-.passage p,
-.box p {
-  margin: 0.5em 0;             /* was ~12px / default larger */
-}
-.passage p:first-child,
-.box p:first-child { margin-top: 0; }
-.passage p:last-child,
-.box p:last-child  { margin-bottom: 0; }
-
-/* Headings: reduce default top/bottom margins so they don't blow up spacing */
-h1, h2, h3 { 
-  margin: 0.4em 0 0.5em;
-}
-
-/* Lists used in instructions/consent */
-ul.options {
-  margin: 0.5em 0 0.25em;
-  padding-left: 1.25em;        /* keep bullets aligned */
-}
-ul.options li { 
-  margin: 0.25em 0;
-}
-
-/* General paragraph default (outside .passage/.box) */
-p { margin: 0 0 0.7em; }
-
-/* Optional: tighten HR spacing slightly */
-hr { margin: 16px 0; }         /* was 24px */
-
-/* --- Writing page: stack prompt above editor and align widths --- */
-#screen-writing .columns {
-  display: grid;
-  grid-template-columns: 1fr; /* single column */
-  gap: 16px;
-}
-
-#screen-writing .col.prompt,
-#screen-writing .col.writing {
-  width: 100%; /* same width, aligned */
-}
-
-/* Writing page: match textarea text size to the prompt */
-#screen-writing .writing textarea {
-  font-size: 1rem;    /* same as normal body/prompt text (≈16px) */
-  line-height: 1.6;   /* keep it readable */
-}
-
-/* Make the placeholder the same size for consistency */
-#screen-writing .writing textarea::placeholder {
-  font-size: 1rem;
-}
-
-/* ---------------------------
-   Global: center card titles
-   --------------------------- */
-.card h2 {
-  text-align: center;       /* center all card titles */
-  margin-top: 0;            /* keep spacing consistent */
-}
-
-/* ---------------------------
-   Login specific centering
-   --------------------------- */
-/* center the contents of fields where desired */
-.center-field {
-  display: flex;
-  flex-direction: column;
-  align-items: center;      /* center label + input horizontally */
-  gap: 8px;
-}
-
-/* enlarge the email input 1.5x visually (width & height) and keep centered */
-.large-input {
-  display: block;
-  margin: 0 auto;
-  /* width: make it visually 1.5x typical card input but constrain to not overflow */
-  width: min(90%, 800px);           /* keep responsive — will appear larger in typical layouts */
-  max-width: 900px;
-  /* make it visually taller */
-  padding: 14px 18px;               /* larger padding (height up) */
-  font-size: 1.125rem;              /* slightly larger text */
-  border-radius: 12px;
-  border: 1px solid #263245;
-  background: #0b1220;
-  color: var(--text);
-  box-sizing: border-box;
-  /* visually scale width by 1.5 relative to usual smaller inputs in narrow contexts */
-  transform-origin: center;
-}
-
-/* Slightly increase the button footprint when used in centered login area */
-#loginControls .primary {
-  padding: 14px 28px;
-  font-size: 16px;
-}
-
-/* Ensure the label above the input is centered */
-.center-field label {
-  display: block;
-  text-align: center;
-  color: #d6dde5;
-  font-weight: 600;
-}
-
-/* On very narrow screens, reduce excessive width so layout stays nice */
-@media (max-width: 420px) {
-  .large-input {
-    width: 100%;
-    padding: 12px 14px;
-    font-size: 1rem;
-  }
-}
-
-/* ---------------------------
-   Revision Page: adjusted heights
-   Only affects #screen-revision
-   --------------------------- */
-
-/* Keep the revision card roomy but not too tall */
-#screen-revision .container {
-  max-width: 1100px;
-  margin: 0 auto;
-}
-
-#screen-revision .card {
-  padding: 28px;
-}
-
-/* Make each field centered with equal side margins */
-#screen-revision .field {
-  margin-left: auto;
-  margin-right: auto;
-  max-width: 1000px;
-}
-
-/* Feedback box: auto-size to content up to a modest max, then scroll */
-#screen-revision #feedbackBox {
-  height: auto;                 /* grows with content */
-  min-height: 6vh;             /* not tiny on very short feedback */
-  max-height: 12.5vh;          /* half of previous 25vh */
-  overflow: auto;              /* scroll when feedback exceeds max-height */
-  resize: vertical;            /* user may still expand if they want */
-  width: 100%;
-  box-sizing: border-box;
-  padding: 12px;
-}
-
-/* Draft editor: reduce to half previous height (50vh -> 25vh) */
-#screen-revision #draftEditor {
-  height: 25vh;                /* reduced height */
-  min-height: 18vh;            /* avoid being too small on short viewports */
-  max-height: 40vh;            /* allow some growth on large screens if user resizes */
-  overflow: auto;
-  resize: vertical;            /* allow user to expand if needed */
-  width: 100%;
-  box-sizing: border-box;
-  padding: 12px;
-}
-
-/* Ensure all textareas use consistent font/line-height on the revision page */
-#screen-revision textarea {
-  font-size: 1rem;
-  line-height: 1.5;
-}
-
-/* Small screen adjustments */
-@media (max-width: 420px) {
-  #screen-revision #feedbackBox { max-height: 14vh; min-height: 8vh; }
-  #screen-revision #draftEditor  { height: 30vh; min-height: 22vh; }
-}
-
-/* ---------------------------
-   Revision Page Feedback Style
-   --------------------------- */
-
-/* Feedback box font & color — distinguish from student's draft */
-#screen-revision #feedbackBox {
-  /* ----- Font style choices ----- */
-  font-family: Georgia, "Times New Roman", serif;  /* Option B: classic serif */
-
-
-  /* ----- Color choices ----- */
-  color: #c2d8ad;           /* amber (warm) */
-  /* Alternatives:
-     color: var(--accent);     // Option A: green accent
-     color: #38bdf8;           // Option C: cyan/blue
-     color: #c084fc;           // Option D: purple
-  */
-
-  background-color: #0b1220;  /* keep consistent with theme */
-  border: 1px solid #334155;  /* subtle border to separate */
-  padding: 12px;
-  border-radius: 10px;
-  line-height: 1.55;
-}
-
-/* Draft editor retains normal readable neutral font/color */
-#screen-revision #draftEditor {
-  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  color: var(--text);
-  background-color: #0f172a;
-  border: 1px solid #1f2937;
+/* -------- Draft editor (white bg, black text) -------- */
+#draftEditor {
+  background: #ffffff;
+  color: #000000;
+  border: 1px solid #cfcfcf;
   border-radius: 10px;
   padding: 12px;
+  font-family: "Times New Roman", Times, serif;
+  font-size: 1rem;  
+  height: 50vh;         
+  min-height: 30vh;      
+  max-height: 70vh;      
+  resize: vertical;
+  width: 100%;
+  box-sizing: border-box;
   line-height: 1.6;
 }
 
-/* ---------------------------
-   Floating rating overlay (draggable)
-   Applies only on revision page
-   --------------------------- */
+/* responsive tweak */
+@media (max-width: 420px) {
+  #draftEditor { height: 30vh; min-height: 22vh; }
+}
 
+/* -------- Feedback area -------- */
+
+/* centered title above the feedback box */
+.feedback-title, #feedbackTitle {
+  text-align: center;
+  font-weight: 700;
+  font-size: 1rem;
+  color: #fff7c7; /* light yellow font color */
+  margin-bottom: 8px;
+  display: block;
+}
+
+/* standalone feedback box — aligned with draft editor */
+#feedbackPanel {
+  width: 100%;                 /* align horizontally with draft editor */
+  max-width: 1000px;           /* match field max width */
+  margin: 0 auto;              /* centered */
+  min-height: 25vh;            /* same height as draft editor for alignment */
+  max-height: 40vh;
+  overflow: auto;
+  padding: 14px;
+  border-radius: 10px;
+  box-sizing: border-box;
+  background: var(--feedback-yellow); /* light yellow background */
+  color: var(--feedback-brown);       /* dark brown text */
+  font-family: Georgia, "Times New Roman", serif;
+  line-height: 1.55;
+  border: 1px solid var(--panel-border);
+  white-space: pre-wrap;
+}
+
+/* ensure the panel is visually separate from the .field label space */
+#screen-revision .field > .feedback-title { margin-top: 0; }
+
+/* feedback navigation buttons below the box */
+.feedback-nav {
+  margin-top: 12px;
+  text-align: center;
+}
+.feedback-nav button {
+  min-width: 100px;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-weight: 700;
+}
+.feedback-nav .primary {
+  box-shadow: 0 8px 20px rgba(34,197,94,0.18);
+}
+.feedback-nav .secondary {
+  background: #1f2937;
+  color: var(--text);
+  box-shadow: none;
+}
+
+/* responsive adjustment */
+@media (max-width: 420px) {
+  #feedbackPanel {
+    width: 100%;
+    max-height: 30vh;
+    min-height: 22vh;
+  }
+}
+
+/* -------- Floating rating overlay (unchanged, kept for completeness) -------- */
 .floating-overlay {
   position: fixed;
   left: 50%;
@@ -325,20 +218,16 @@ hr { margin: 16px 0; }         /* was 24px */
   transform: translate(-50%, -50%);
   width: min(92%, 720px);
   max-width: 720px;
-  background: rgba(6, 10, 18, 0.92);  /* dark semi-transparent panel */
+  background: var(--glass);
   border: 1px solid rgba(255,255,255,0.06);
   box-shadow: 0 20px 40px rgba(0,0,0,0.6);
   border-radius: 12px;
   z-index: 1200;
   color: var(--text);
   backdrop-filter: blur(4px);
-  touch-action: none; /* allow custom touch drag */
+  touch-action: none;
 }
-
-/* smaller variant for thank-you overlay */
 .floating-overlay.small { width: min(80%, 420px); }
-
-/* top drag handle */
 .floating-handle {
   cursor: grab;
   padding: 8px 10px;
@@ -350,41 +239,34 @@ hr { margin: 16px 0; }         /* was 24px */
   border-top-left-radius: 12px;
   border-top-right-radius: 12px;
 }
-
-/* body inside overlay */
 .floating-body { padding: 10px 16px; }
-
-/* enlarge spacing between choices — doubled */
-#likertFloating { gap: 32px; } /* previously ~16px; now doubled */
-
-/* style circles for floating overlay (reuse visual style) */
-#likertFloating .circle {
-  width: 44px;
-  height: 44px;
-  border-radius: 999px;
-  border: 2px solid var(--accent);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  cursor: pointer;
-  user-select: none;
-  background: transparent;
-  transition: background .12s ease, transform .06s ease;
-}
-#likertFloating .circle:hover { transform: translateY(-2px); }
-#likertFloating .circle.selected { background: var(--accent); color: #052e16; }
-
-/* make small muted label text smaller */
-.small { font-size: 12px; color: var(--muted); }
-
-/* ensure overlay buttons look consistent */
-#btnSubmitMyRating, #btnRatingOk {
-  margin-top: 6px;
-}
-
-/* On small screens, make overlay fullscreen-ish */
 @media (max-width: 480px) {
   .floating-overlay { left: 50%; top: 60%; transform: translate(-50%, -60%); width: 94%; }
-  .floating-handle { display: none; } /* hide drag handle on tiny devices */
+  .floating-handle { display: none; }
+}
+
+/* likert bubbles inside overlay */
+#likertFloating { display:flex; justify-content:space-between; align-items:center; gap:32px; max-width:520px; margin:0 auto; }
+#likertFloating .circle {
+  width: 44px; height: 44px; border-radius: 999px; border: 2px solid var(--accent); display:inline-flex;
+  align-items:center; justify-content:center; font-weight:700; cursor:pointer; user-select:none; transition: background .12s ease, transform .06s ease;
+}
+#likertFloating .circle:hover { transform: translateY(-2px); }
+#likertFloating .circle.selected { background: var(--accent); color: var(--accent-dark); }
+
+/* -------- Small helpers -------- */
+.small { font-size: 12px; color: var(--muted); }
+.box { background: var(--card); padding: 16px; border: 1px solid var(--card-border); border-radius: 16px; max-height: 70vh; overflow:auto; }
+
+/* -------- Print cleanup (optional) -------- */
+@media print {
+  .floating-overlay, .site-header { display:none; }
+  body { background: #fff; color: #000; }
+}
+
+/* -------- Center the Proceed button below the draft text box -------- */
+#btnProceedContent {
+  display: block;
+  margin: 20px auto 0 auto;  /* top margin + center horizontally */
+  text-align: center;
 }
