@@ -17,11 +17,16 @@ COPY backend/requirements.txt ./backend/requirements.txt
 RUN pip install --upgrade pip && \
     pip install --no-cache-dir -r backend/requirements.txt
 
-# Copy rest of the backend code
+# Copy backend and frontend files
 COPY backend/ ./backend/
+COPY frontend_rev/ ./frontend_rev/
+
+# Copy the startup script and make it executable
+COPY backend/start.sh /app/start.sh
+RUN chmod +x /app/start.sh
 
 # Expose the port uvicorn will run on
 EXPOSE 8000
 
-# Command to run the app
-CMD ["uvicorn", "backend.app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Use the custom startup script to seed and launch app
+CMD ["/app/start.sh"]

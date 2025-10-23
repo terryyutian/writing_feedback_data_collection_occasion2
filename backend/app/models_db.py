@@ -11,7 +11,7 @@ def utcnow() -> datetime:
 
 class Participant(Base):
     __tablename__ = "participants"
-    asurite: Mapped[str] = mapped_column(String, primary_key=True, index=True)
+    asurite: Mapped[str] = mapped_column(String(255), primary_key=True, index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
 
     drafts = relationship("Draft", back_populates="participant", uselist=True)
@@ -21,7 +21,7 @@ class Participant(Base):
 class Draft(Base):
     __tablename__ = "drafts"
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    asurite: Mapped[str] = mapped_column(String, ForeignKey("participants.asurite"), nullable=False, index=True)
+    asurite: Mapped[str] = mapped_column(String(255), ForeignKey("participants.asurite"), nullable=False, index=True)
 
     essay_text: Mapped[str] = mapped_column(Text, default="", nullable=False)
     # NEW: split feedback into strengths + 3 improvement areas
@@ -33,7 +33,7 @@ class Draft(Base):
     content_feedback: Mapped[str] = mapped_column(Text, default="", nullable=False)
 
     # NEW: prompt_type for analysis (e.g., 'combined', 'rubric', etc.)
-    prompt_type: Mapped[str] = mapped_column(String, default="", nullable=False, index=True)
+    prompt_type: Mapped[str] = mapped_column(String(255), default="", nullable=False, index=True)
 
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
 
@@ -41,8 +41,8 @@ class Draft(Base):
 
 class WritingSession(Base):
     __tablename__ = "writing_sessions"
-    id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    asurite: Mapped[str] = mapped_column(String, ForeignKey("participants.asurite"), nullable=False, index=True)
+    id: Mapped[str] = mapped_column(String(255), primary_key=True, default=lambda: str(uuid.uuid4()))
+    asurite: Mapped[str] = mapped_column(String(255), ForeignKey("participants.asurite"), nullable=False, index=True)
     started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
     submitted_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
 
@@ -52,8 +52,8 @@ class WritingSession(Base):
 class Revision(Base):
     __tablename__ = "revisions"
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    session_id: Mapped[str] = mapped_column(String, ForeignKey("writing_sessions.id"), nullable=False, unique=True)
-    asurite: Mapped[str] = mapped_column(String, ForeignKey("participants.asurite"), nullable=False, index=True)
+    session_id: Mapped[str] = mapped_column(String(255), ForeignKey("writing_sessions.id"), nullable=False, unique=True)
+    asurite: Mapped[str] = mapped_column(String(255), ForeignKey("participants.asurite"), nullable=False, index=True)
 
     language_revision_text: Mapped[str] = mapped_column(Text, default="", nullable=True)
     language_rating: Mapped[int] = mapped_column(Integer, nullable=True)  # 1..5

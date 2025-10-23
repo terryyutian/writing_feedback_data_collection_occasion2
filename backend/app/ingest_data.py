@@ -29,7 +29,7 @@ def ingest_data():
     db = SessionLocal()
     try:
         inserted = []
-        for s in SAMPLE_DATA:
+        for s in ALL_DATA:
             asurite = (s["asurite"] or "").strip().lower()
             # check if participant exists
             participant = db.get(Participant, asurite)
